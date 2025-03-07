@@ -119,6 +119,7 @@ create_uvc() {
 	mkdir functions/$FUNCTION
 
 	create_frame $FUNCTION 640 360 uncompressed u
+	create_frame $FUNCTION 640 480 uncompressed u
 	create_frame $FUNCTION 1280 720 uncompressed u
 	create_frame $FUNCTION 320 180 uncompressed u
 	create_frame $FUNCTION 1920 1080 mjpeg m
@@ -176,6 +177,9 @@ case "$1" in
 	echo "Creating the USB gadget"
 	#echo "Loading composite module"
 	#modprobe libcomposite
+
+	umount /sys/kernel/config
+	mount -t configfs none /sys/kernel/config
 
 	echo "Creating gadget directory g1"
 	mkdir -p $GADGET/g1
