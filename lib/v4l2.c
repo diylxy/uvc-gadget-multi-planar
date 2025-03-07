@@ -63,6 +63,9 @@ struct v4l2_format_desc {
 	struct list_entry frames;
 };
 
+#define BUFFER_COUNT 4
+#define FMT_NUM_PLANES 1
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
 /* -----------------------------------------------------------------------------
  * Formats enumeration
  */
@@ -290,6 +293,8 @@ struct v4l2_device *v4l2_open(const char *devname)
 		dev->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	else if (capabilities & V4L2_CAP_VIDEO_OUTPUT)
 		dev->type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+	else if (capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE)
+		dev->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
 	else {
 		printf("Error opening device %s: neither video capture "
 			"nor video output supported.\n", devname);
@@ -745,8 +750,14 @@ int v4l2_mmap_buffers(struct v4l2_device *dev)
 			.type = dev->type,
 			.memory = dev->memtype,
 		};
-		void *mem;
+		struct v4l2_plane planes[FMT_NUM_PLANES];
+		CLEAR(planes);
 
+		if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type) {
+			buf.m.planes = planes;
+			buf.length = FMT_NUM_PLANES;
+		}
+	
 		ret = ioctl(dev->fd, VIDIOC_QUERYBUF, &buf);
 		if (ret < 0) {
 			printf("%s: unable to query buffer %u (%d).\n",
@@ -754,19 +765,31 @@ int v4l2_mmap_buffers(struct v4l2_device *dev)
 			return -errno;
 		}
 
-		mem = mmap(0, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED,
-			   dev->fd, buf.m.offset);
-		if (mem == MAP_FAILED) {
+		if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type) {
+			buffer->size = buf.m.planes[0].length;
+			buffer->mem =
+			mmap(NULL /* start anywhere */,
+					buf.m.planes[0].length,
+					PROT_READ | PROT_WRITE /* required */,
+					MAP_SHARED /* recommended */,
+					dev->fd, buf.m.planes[0].m.mem_offset);
+		} else {
+			buffer->size = buf.length;
+			buffer->mem =
+			mmap(NULL /* start anywhere */,
+					buf.length,
+					PROT_READ | PROT_WRITE /* required */,
+					MAP_SHARED /* recommended */,
+					dev->fd, buf.m.offset);
+		}
+		if (buffer->mem == MAP_FAILED) {
 			printf("%s: unable to map buffer %u (%d)\n",
 			       dev->name, i, errno);
 			return -errno;
 		}
 
-		buffer->mem = mem;
-		buffer->size = buf.length;
-
 		printf("%s: buffer %u mapped at address %p.\n", dev->name, i,
-		       mem);
+			buffer->mem);
 	}
 
 	return 0;
@@ -781,6 +804,12 @@ int v4l2_dequeue_buffer(struct v4l2_device *dev, struct video_buffer *buffer)
 	buf.type = dev->type;
 	buf.memory = dev->memtype;
 
+	if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type) {
+		struct v4l2_plane planes[FMT_NUM_PLANES];
+		buf.m.planes = planes;
+		buf.length = FMT_NUM_PLANES;
+	}
+
 	ret = ioctl(dev->fd, VIDIOC_DQBUF, &buf);
 	if (ret < 0) {
 		printf("%s: unable to dequeue buffer index %u/%u (%d)\n",
@@ -791,7 +820,10 @@ int v4l2_dequeue_buffer(struct v4l2_device *dev, struct video_buffer *buffer)
 	buffer->index = buf.index;
 	buffer->size = buf.length;
 	buffer->mem = dev->buffers.buffers[buf.index].mem;
-	buffer->bytesused = buf.bytesused;
+	if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type)
+		buffer->bytesused = buf.m.planes[0].bytesused;
+	else
+		buffer->bytesused = buf.bytesused;
 	buffer->timestamp = buf.timestamp;
 	buffer->error = !!(buf.flags & V4L2_BUF_FLAG_ERROR);
 
@@ -816,6 +848,13 @@ int v4l2_queue_buffer(struct v4l2_device *dev, struct video_buffer *buffer)
 
 	if (dev->type == V4L2_BUF_TYPE_VIDEO_OUTPUT)
 		buf.bytesused = buffer->bytesused;
+
+	if (dev->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
+		struct v4l2_plane planes[FMT_NUM_PLANES];
+		buf.m.planes = planes;
+		buf.length = FMT_NUM_PLANES;
+		buf.bytesused = buffer->bytesused;
+	}
 
 	ret = ioctl(dev->fd, VIDIOC_QBUF, &buf);
 	if (ret < 0) {
