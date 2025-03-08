@@ -23,13 +23,15 @@ if libjpeg.found() and threads.found() and libcamera.found()
   libuvcgadget_sources += files(['mjpeg_encoder.cpp'])
 endif
 
-if libjpeg.found() and threads.found()
-  libuvcgadget_sources += files(['mjpeg_encoder_v4l2.c'])
-endif
+libuvcgadget_sources += files(['mjpeg_encoder_v4l2.c'])
+
+# if libjpeg.found() and threads.found()
+#   libuvcgadget_sources += files(['mjpeg_encoder_v4l2.c'])
+# endif
 
 libuvcgadget = shared_library('uvcgadget',
                               libuvcgadget_sources,
-                              dependencies : [libcamera, libjpeg, threads],
+                              dependencies : [libcamera, threads],
                               version : uvc_gadget_version,
                               install : true,
                               include_directories : [includes, config_includes])

@@ -9,7 +9,7 @@ project('uvc-gadget', 'c', 'cpp',
         'cpp_std=c++17',
     ],
     license : 'LGPL 2.1+')
-
+add_project_link_arguments('-ljpeg', language: 'c')
 # Generate version information. The uvc_gadget_git_version variable contains the
 # full version with git patch count and SHA1 (e.g. 1.2.3+211-c94a24f4), while
 # the uvc_gadget_version variable contains the major.minor.patch (e.g. 1.2.3)
@@ -63,9 +63,9 @@ if libcamera.found()
   conf.set('HAVE_LIBCAMERA', true)
 endif
 
-if libjpeg.found() and threads.found()
+# if libjpeg.found() and threads.found()
     conf.set('CONFIG_CAN_ENCODE', true)
-endif
+# endif
 
 configure_file(output : 'config.h', configuration : conf)
 config_includes = include_directories('.')
