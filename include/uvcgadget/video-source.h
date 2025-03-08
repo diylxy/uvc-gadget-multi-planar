@@ -25,6 +25,7 @@ struct video_source_ops {
 	int(*import_buffers)(struct video_source *src,
 			     struct video_buffer_set *buffers);
 	int(*free_buffers)(struct video_source *src);
+	int(*mmap_buffers)(struct video_source *src);
 	int(*stream_on)(struct video_source *src);
 	int(*stream_off)(struct video_source *src);
 	int(*queue_buffer)(struct video_source *src, struct video_buffer *buf);
@@ -68,6 +69,7 @@ int video_source_export_buffers(struct video_source *src,
 int video_source_import_buffers(struct video_source *src,
 				struct video_buffer_set *buffers);
 int video_source_free_buffers(struct video_source *src);
+int video_source_mmap_buffers(struct video_source *src);
 int video_source_stream_on(struct video_source *src);
 int video_source_stream_off(struct video_source *src);
 int video_source_queue_buffer(struct video_source *src,

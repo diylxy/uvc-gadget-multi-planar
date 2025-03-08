@@ -193,6 +193,14 @@ static int uvc_stream_start_encoded(struct uvc_stream *stream)
 		return ret;
 	}
 
+	/* mmap buffers on the source (for v4l2). */
+	ret = video_source_mmap_buffers(stream->src);
+	if (ret < 0) {
+		printf("Failed to map source buffers: %s (%d)\n",
+		       strerror(-ret), -ret);
+		goto error_free_source;
+	}
+
 	/* Allocate buffers on the sink. */
 	ret = v4l2_alloc_buffers(sink, V4L2_MEMORY_MMAP, 4);
 	if (ret < 0) {

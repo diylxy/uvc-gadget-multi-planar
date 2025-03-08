@@ -853,7 +853,7 @@ int v4l2_queue_buffer(struct v4l2_device *dev, struct video_buffer *buffer)
 		struct v4l2_plane planes[FMT_NUM_PLANES];
 		buf.m.planes = planes;
 		buf.length = FMT_NUM_PLANES;
-		buf.bytesused = buffer->bytesused;
+		buf.m.planes[0].bytesused = buffer->bytesused;
 	}
 
 	ret = ioctl(dev->fd, VIDIOC_QBUF, &buf);

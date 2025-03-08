@@ -56,6 +56,13 @@ int video_source_free_buffers(struct video_source *src)
 	return src->ops->free_buffers(src);
 }
 
+int video_source_mmap_buffers(struct video_source *src)
+{
+	if (src->ops->mmap_buffers)				// 用于v4l2视频源的MJPEG编码方式，libcamera在alloc中已完成mmap
+		return src->ops->mmap_buffers(src);
+	return 0;
+}
+
 int video_source_stream_on(struct video_source *src)
 {
 	return src->ops->stream_on(src);
