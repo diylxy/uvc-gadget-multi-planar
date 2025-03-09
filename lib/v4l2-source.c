@@ -60,7 +60,8 @@ static void v4l2_source_video_process(void *d)
 			src->vdev->format.height,
 			src->vdev->format.bytesperline,
 			src->src.handler_data,
-			&src->src
+			&src->src,
+			src->vdev
 		);
 		return;
 	}

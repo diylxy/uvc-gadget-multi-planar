@@ -67,6 +67,7 @@ static void encodeJPEG(struct jpeg_compress_struct cinfo, struct source_item_t* 
     output->sink_id = sink->sink_id;
     output->handler_data = source->handler_data;
     output->src = source->src;
+    output->vdev = source->vdev;
     printf("encoded: %d -> %d, size=%d\n", output->source_id, output->sink_id, output->bytesused);
 }
 
@@ -107,7 +108,7 @@ static void* output_thread(void* param)
         buf.dmabuf = -1;
 
         buf.index = output.source_id;
-        video_source_queue_buffer(output.src, &buf);
+        v4l2_queue_buffer(output.vdev, &buf);
 
         buf.index = output.sink_id;
         (*encoder->handler)(output.handler_data, output.src, &buf);
@@ -220,7 +221,7 @@ int mjpeg_sink_enqueue(struct mjpeg_encoder_v4l2_t* encoder, int sink_id, void* 
     return 0;
 }
 
-int mjpeg_source_enqueue(struct mjpeg_encoder_v4l2_t* encoder, int source_id, void* mem, unsigned int width, unsigned int height, unsigned int byte_per_line, void* handler_data, struct video_source* src)
+int mjpeg_source_enqueue(struct mjpeg_encoder_v4l2_t *encoder, int source_id, void *mem, unsigned int width, unsigned int height, unsigned int byte_per_line, void *handler_data, struct video_source *src, struct v4l2_device *vdev)
 {
     pthread_mutex_lock(&encoder->encode_mutex);
     encoder->source_queue[encoder->source_queue_tail].source_id = source_id;
@@ -230,6 +231,7 @@ int mjpeg_source_enqueue(struct mjpeg_encoder_v4l2_t* encoder, int source_id, vo
     encoder->source_queue[encoder->source_queue_tail].byte_per_line = byte_per_line;
     encoder->source_queue[encoder->source_queue_tail].handler_data = handler_data;
     encoder->source_queue[encoder->source_queue_tail].src = src;
+    encoder->source_queue[encoder->source_queue_tail].vdev = vdev;
     encoder->source_queue_tail = (encoder->source_queue_tail + 1) % MJPEG_ENCODER_BUFFER_QUEUE_SIZE;
     if (encoder->sink_queue_head != encoder->sink_queue_tail) {
         pthread_cond_signal(&encoder->encode_cond_var);
