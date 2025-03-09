@@ -130,6 +130,7 @@ static int v4l2_source_import_buffers(struct video_source *s,
 	for (unsigned int i = 0; i < buffers->nbufs; i++) {
 		src->buffers_sink.buffers[i].mem = buffers->buffers[i].mem;
 		src->buffers_sink.buffers[i].index = buffers->buffers[i].index;
+		mjpeg_sink_enqueue(&src->encoder, buffers->buffers[i].index, buffers->buffers[i].mem);
 	}
 	
 	src->buffers_sink.nbufs = buffers->nbufs;
@@ -237,11 +238,11 @@ static int v4l2_source_queue_buffer(struct video_source *s,
 				    struct video_buffer *buf)
 {
 	struct v4l2_source *src = to_v4l2_source(s);
-
+	// 问题：sink在首次调用时不会有出队事件，需要特殊处理或修改算法
+	printf("sink enqueue: %d\n", buf->index);
 	// sink出队事件
 	if (src->src.type == VIDEO_SOURCE_ENCODED) {
 		// TODO: 若使用JPEG编码，入编码器sink队列待编码，并返回
-		printf("sink enqueue: %d\n", buf->index);
 		mjpeg_sink_enqueue(&src->encoder, buf->index, buf->mem);
 		return 0;
 	}
