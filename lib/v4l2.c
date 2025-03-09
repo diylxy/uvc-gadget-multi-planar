@@ -661,6 +661,14 @@ int v4l2_export_buffers(struct v4l2_device *dev)
 			.type = dev->type,
 			.memory = dev->memtype,
 		};
+		struct v4l2_plane planes[FMT_NUM_PLANES];
+		CLEAR(planes);
+
+		if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type) {
+			buf.m.planes = planes;
+			buf.length = FMT_NUM_PLANES;
+			expbuf.plane = 0;
+		}
 
 		ret = ioctl(dev->fd, VIDIOC_QUERYBUF, &buf);
 		if (ret < 0) {
@@ -675,7 +683,11 @@ int v4l2_export_buffers(struct v4l2_device *dev)
 			return -errno;
 		}
 
-		dev->buffers.buffers[i].size = buf.length;
+		if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == dev->type) {
+			dev->buffers.buffers[i].size = buf.m.planes[0].length;
+		} else {
+			dev->buffers.buffers[i].size = buf.length;
+		}
 		dev->buffers.buffers[i].dmabuf = expbuf.fd;
 
 		printf("%s: buffer %u exported with fd %u.\n",
