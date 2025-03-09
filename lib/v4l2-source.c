@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/videodev2.h>
+#include <sys/ioctl.h>
 
 #include "events.h"
 #include "tools.h"
@@ -87,6 +89,16 @@ static int v4l2_source_set_format(struct video_source *s,
 		src->src.type = VIDEO_SOURCE_ENCODED;
 		fmt->pixelformat = V4L2_PIX_FMT_YUV420;
 		mjpeg_begin(&src->encoder, &src->src.handler);
+		struct v4l2_control ctl;
+		ctl.id = V4L2_CID_AUTO_WHITE_BALANCE;
+		ctl.value = 1;
+		ioctl(src->vdev->fd, VIDIOC_S_CTRL, &ctl);
+		ctl.id = V4L2_CID_EXPOSURE_AUTO;
+		ctl.value = V4L2_EXPOSURE_AUTO;
+		ioctl(src->vdev->fd, VIDIOC_S_CTRL, &ctl);
+		ctl.id = V4L2_CID_AUTOGAIN;
+		ctl.value = 1;
+		ioctl(src->vdev->fd, VIDIOC_S_CTRL, &ctl);
 	} else {
 		src->src.type = VIDEO_SOURCE_DMABUF;
 	}
