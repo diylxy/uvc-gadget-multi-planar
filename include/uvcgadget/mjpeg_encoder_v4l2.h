@@ -2,7 +2,7 @@
 #define __MJPEG_ENCODER_V4L2_H__
 
 #define MJPEG_ENCODER_BUFFER_QUEUE_SIZE 8
-#define MJPEG_ENCODER_QUALITY 50
+#define MJPEG_ENCODER_QUALITY 80
 #define ENCODE_THREAD_NUM 4
 
 struct source_item_t

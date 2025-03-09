@@ -68,7 +68,6 @@ static void encodeJPEG(struct jpeg_compress_struct cinfo, struct source_item_t* 
     output->handler_data = source->handler_data;
     output->src = source->src;
     output->vdev = source->vdev;
-    printf("encoded: %d -> %d, size=%d\n", output->source_id, output->sink_id, output->bytesused);
 }
 
 static void* encode_thread(void* param)
@@ -150,14 +149,10 @@ static int output_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct output_it
             pthread_mutex_unlock(&encoder->output_mutex);
             return -1;
         }
-        else if (encoder->abort) {
-            printf("WARNING: waiting for encoder\n");
-        }
     }
     *output = encoder->output_queue[encoder->output_queue_head];
     encoder->output_queue_head = (encoder->output_queue_head + 1) % MJPEG_ENCODER_BUFFER_QUEUE_SIZE;
     pthread_mutex_unlock(&encoder->output_mutex);
-    printf("output dequeue: %d -> %d\n", output->source_id, output->sink_id);
     return 0;
 }
 
@@ -171,9 +166,6 @@ static int source_sink_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct sour
         if (encoder->abort) {
             pthread_mutex_unlock(&encoder->encode_mutex);
             return -1;
-        }
-        else if (encoder->abort) {
-            printf("WARNING: waiting for source/sink\n");
         }
     }
     *source = encoder->source_queue[encoder->source_queue_head];
