@@ -206,6 +206,12 @@ int mjpeg_begin(struct mjpeg_encoder_v4l2_t* encoder, video_source_buffer_handle
 int mjpeg_abort(struct mjpeg_encoder_v4l2_t* encoder)
 {
     encoder->abort = 1;
+    pthread_cond_broadcast(&encoder->encode_cond_var);
+    pthread_cond_broadcast(&encoder->output_cond_var);
+    for (int i = 0; i < ENCODE_THREAD_NUM; i++) {
+        pthread_join(encoder->encode_thread[i], NULL);
+    }
+    pthread_join(encoder->output_thread, NULL);
     return 0;
 }
 
