@@ -50,7 +50,7 @@ static void v4l2_source_video_process(void *d)
 	// TODO: 判断如果需要编码，在这里编码buf->mem，buf->bytesused，将结果放入buffers_sink（之后使用队列存储传入的空闲缓冲区）对应的mem中，并设置bytesused
 	// 否则直接调用src->src.handler
 	// src->src.handler中会把sink_buf对应index（过程中还会用到bytesused）传递给sink
-	printf("source enqueue: %d\n", buf.index);
+	printf("source enqueue: %d[%d]\n", buf.index, src->vdev->format.bytesperline);
 	if (src->src.type == VIDEO_SOURCE_ENCODED) {
 		mjpeg_source_enqueue(
 			&src->encoder,

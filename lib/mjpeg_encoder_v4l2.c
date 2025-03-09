@@ -233,6 +233,9 @@ int mjpeg_sink_enqueue(struct mjpeg_encoder_v4l2_t* encoder, int sink_id, void* 
 
 int mjpeg_source_enqueue(struct mjpeg_encoder_v4l2_t *encoder, int source_id, void *mem, unsigned int width, unsigned int height, unsigned int byte_per_line, void *handler_data, struct video_source *src, struct v4l2_device *vdev)
 {
+    if (byte_per_line == 0) {
+        byte_per_line = width;
+    }
     pthread_mutex_lock(&encoder->encode_mutex);
     encoder->source_queue[encoder->source_queue_tail].source_id = source_id;
     encoder->source_queue[encoder->source_queue_tail].mem = mem;
