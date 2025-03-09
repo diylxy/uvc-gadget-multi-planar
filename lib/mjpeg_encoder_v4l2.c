@@ -127,15 +127,26 @@ static int output_enqueue(struct mjpeg_encoder_v4l2_t* encoder, struct output_it
     return 0;
 }
 
+static void get_200ms_ts(struct timespec* ts)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ts->tv_sec = tv.tv_sec + 0;
+    ts->tv_nsec = tv.tv_usec * 1000 + 200 * 1000 * 1000;
+    if (ts->tv_nsec >= 1000 * 1000 * 1000) {
+        ts->tv_sec++;
+        ts->tv_nsec -= 1000 * 1000 * 1000;
+    }
+}
+
 static int output_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct output_item_t* output)
 {
-    struct timespec ts = { 0, 200 * 1000 * 1000 };
+    struct timespec ts;
     pthread_mutex_lock(&encoder->output_mutex);
     while (encoder->output_queue_head == encoder->output_queue_tail) {
+        get_200ms_ts(&ts);
         pthread_cond_timedwait(&encoder->output_cond_var, &encoder->output_mutex, &ts);
-        if (encoder->abort && encoder->output_queue_head == encoder->output_queue_tail
-            && encoder->source_queue_head == encoder->source_queue_tail
-            && encoder->sink_queue_head == encoder->sink_queue_tail) {
+        if (encoder->abort && encoder->output_queue_head == encoder->output_queue_tail) {
             pthread_mutex_unlock(&encoder->output_mutex);
             return -1;
         }
@@ -152,13 +163,12 @@ static int output_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct output_it
 
 static int source_sink_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct source_item_t* source, struct sink_item_t* sink)
 {
-    struct timespec ts = { 0, 200 * 1000 * 1000 };
+    struct timespec ts;
     pthread_mutex_lock(&encoder->encode_mutex);
     while (encoder->source_queue_head == encoder->source_queue_tail || encoder->sink_queue_head == encoder->sink_queue_tail) {
+        get_200ms_ts(&ts);
         pthread_cond_timedwait(&encoder->encode_cond_var, &encoder->encode_mutex, &ts);
-        if (encoder->abort
-            && encoder->source_queue_head == encoder->source_queue_tail
-            && encoder->sink_queue_head == encoder->sink_queue_tail) {
+        if (encoder->abort) {
             pthread_mutex_unlock(&encoder->encode_mutex);
             return -1;
         }
