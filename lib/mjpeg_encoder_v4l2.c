@@ -110,7 +110,7 @@ static void* output_thread(void* param)
         video_source_queue_buffer(output.src, &buf);
 
         buf.index = output.sink_id;
-        encoder->handler(output.handler_data, output.src, &buf);
+        (*encoder->handler)(output.handler_data, output.src, &buf);
     }
     return NULL;
 }
@@ -174,7 +174,7 @@ static int source_sink_dequeue(struct mjpeg_encoder_v4l2_t* encoder, struct sour
     return 0;
 }
 
-int mjpeg_begin(struct mjpeg_encoder_v4l2_t* encoder, video_source_buffer_handler_t handler)
+int mjpeg_begin(struct mjpeg_encoder_v4l2_t* encoder, video_source_buffer_handler_t *handler)
 {
     encoder->handler = handler;
 

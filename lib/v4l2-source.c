@@ -86,7 +86,7 @@ static int v4l2_source_set_format(struct video_source *s,
 	if (chosen_pixelformat == V4L2_PIX_FMT_MJPEG) {
 		src->src.type = VIDEO_SOURCE_ENCODED;
 		fmt->pixelformat = V4L2_PIX_FMT_YUV420;
-		mjpeg_begin(&src->encoder, src->src.handler);
+		mjpeg_begin(&src->encoder, &src->src.handler);
 	} else {
 		src->src.type = VIDEO_SOURCE_DMABUF;
 	}

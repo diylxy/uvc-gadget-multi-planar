@@ -55,12 +55,12 @@ struct mjpeg_encoder_v4l2_t
     pthread_mutex_t output_mutex;
     pthread_cond_t output_cond_var;
 
-    video_source_buffer_handler_t handler;
+    video_source_buffer_handler_t *handler;
 
     int abort;
 };
 
-int mjpeg_begin(struct mjpeg_encoder_v4l2_t *encoder, video_source_buffer_handler_t handler);
+int mjpeg_begin(struct mjpeg_encoder_v4l2_t* encoder, video_source_buffer_handler_t *handler);
 int mjpeg_abort(struct mjpeg_encoder_v4l2_t *encoder);
 int mjpeg_sink_enqueue(struct mjpeg_encoder_v4l2_t *encoder, int sink_id, void *dest);
 int mjpeg_source_enqueue(struct mjpeg_encoder_v4l2_t *encoder, int source_id, void *mem, unsigned int width, unsigned int height, unsigned int byte_per_line, void *handler_data, struct video_source *src);
