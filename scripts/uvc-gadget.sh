@@ -182,7 +182,7 @@ case "$1" in
 	mount -t configfs none /sys/kernel/config
 
 	echo "Creating gadget directory g1"
-	mkdir -p $GADGET/g1
+	mkdir -p $GADGET/g1 || true
 
 	cd $GADGET/g1
 	if [ $? -ne 0 ]; then
@@ -205,12 +205,12 @@ case "$1" in
 	echo "OK"
 
 	echo "Creating Config"
-	mkdir configs/c.1
-	mkdir configs/c.1/strings/0x409
+	mkdir configs/c.1 || true
+	mkdir configs/c.1/strings/0x409 || true
 
 	echo "Creating functions..."
 	#create_msd configs/c.1 mass_storage.0 $USBFILE
-	create_uvc configs/c.1 uvc.0
+	create_uvc configs/c.1 uvc.0 || true
 	#create_uvc configs/c.1 uvc.1
 	echo "OK"
 
